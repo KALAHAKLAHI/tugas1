@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>Login Page</h1>
+    <h1>Tempat Login</h1>
     <div class="flex flex-col gap-2">
       <input
         type="text"
@@ -17,8 +17,7 @@
         placeholder="Password"
       />
       <button
-        @click="onLogin()"
-        :disabled="!isFormValid"
+        @click="handleLogin()"
         class="bg-blue-500 text-white py-1 px-3"
       >
         Login
@@ -31,24 +30,48 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import axios from "axios";
+import Swal from 'sweetalert2';
 
 const auth = useAuthStore();
 const username = ref("");
 const password = ref("");
 const router = useRouter();
 
-// Check if both username and password are not empty
-const isFormValid = () => {
-  return username.value.trim() !== "" && password.value.trim() !== "";
-};
-
-const onLogin = () => {
-  if (isFormValid()) {
-    auth.login(username.value); // You may adjust this part according to your authentication logic
-    router.push("/");
-  } else {
-    // Handle invalid login attempt, e.g., show an error message
-    alert("Please enter username and password");
-  }
-};
+const handleLogin = async () => {
+  const response = await axios({
+    method: "post",
+    url: "http://localhost:3000/login",
+    data: {
+      username: username.value,
+      password: password.value
+    }
+  })
+  if (response.data.status === "success") {
+  Swal.fire({
+    title: 'Login success!',
+    text: 'Welcome back!',
+    icon: 'success',
+    confirmButtonText: 'Cool'
+  });
+  auth.login(username.value);
+  router.push('/');
+} else if (response.data.status === "Error, username not found") {
+  Swal.fire({
+    title: 'Error',
+    text: 'Wrong Username',
+    icon: 'Warning',
+    confirmButtonText: 'Try Again'
+  });
+} else if (response.data.status === "Error, wrong password") {
+  Swal.fire({
+    title: 'Error',
+    text: 'Wrong password',
+    icon: 'warning',
+    confirmButtonText: 'Try again'
+  });
+} else {
+  console.log(response);
+}
+}
 </script>
